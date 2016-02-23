@@ -20,7 +20,7 @@ from oslo_middleware import base
 
 
 ENV_REQUEST_ID = 'openstack.request_id'
-HTTP_RESP_HEADER_REQUEST_ID = 'x-openstack-request-id'
+HTTP_RESP_HEADER_REQUEST_ID = 'Request-Id'
 
 
 class RequestId(base.Middleware):
