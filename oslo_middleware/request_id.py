@@ -33,6 +33,11 @@ class RequestId(base.Middleware):
     @webob.dec.wsgify
     def __call__(self, req):
         req_id = context.generate_request_id()
+        if (req.path == '/v3/token-auth' or\
+        req.path == '/v3/sign-auth' or\
+        req.path == '/v3/ec2-auth') and \
+        req.headers.get('Request-Id') != None:
+            req_id = req.headers.get('Request-Id')
         req.environ[ENV_REQUEST_ID] = req_id
         response = req.get_response(self.application)
         if HTTP_RESP_HEADER_REQUEST_ID not in response.headers:
