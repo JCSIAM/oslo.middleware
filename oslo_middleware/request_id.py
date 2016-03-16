@@ -35,7 +35,16 @@ class RequestId(base.Middleware):
         req_id = context.generate_request_id()
         if (req.path == '/v3/token-auth' or\
         req.path == '/v3/sign-auth' or\
-        req.path == '/v3/ec2-auth') and \
+        req.path == '/v3/ec2-auth') or\
+        req.path == '/v3/token-auth-ex' or\
+        req.path == '/v3/sign-auth-ex' or\
+        req.path == '/v3/ec2-auth-ex' or\
+        req.path == '/token-auth' or\
+        req.path == '/sign-auth' or\
+        req.path == '/ec2-auth' or\
+        req.path == '/token-auth-ex' or\
+        req.path == '/sign-auth-ex' or\
+        req.path == '/ec2-auth-ex' and \
         req.headers.get('Request-Id') != None:
             req_id = req.headers.get('Request-Id')
         req.environ[ENV_REQUEST_ID] = req_id
