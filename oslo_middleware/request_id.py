@@ -33,9 +33,10 @@ class RequestId(base.Middleware):
     @webob.dec.wsgify
     def __call__(self, req):
         req_id = context.generate_request_id()
-        if (req.path == '/v3/token-auth' or\
+        if (req.headers.get('Request-Id') != None) and\
+        (req.path == '/v3/token-auth' or\
         req.path == '/v3/sign-auth' or\
-        req.path == '/v3/ec2-auth') or\
+        req.path == '/v3/ec2-auth' or\
         req.path == '/v3/token-auth-ex' or\
         req.path == '/v3/sign-auth-ex' or\
         req.path == '/v3/ec2-auth-ex' or\
@@ -44,8 +45,7 @@ class RequestId(base.Middleware):
         req.path == '/ec2-auth' or\
         req.path == '/token-auth-ex' or\
         req.path == '/sign-auth-ex' or\
-        req.path == '/ec2-auth-ex' and \
-        req.headers.get('Request-Id') != None:
+        req.path == '/ec2-auth-ex'):
             req_id = req.headers.get('Request-Id')
         req.environ[ENV_REQUEST_ID] = req_id
         response = req.get_response(self.application)
