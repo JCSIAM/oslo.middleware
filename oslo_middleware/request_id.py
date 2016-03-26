@@ -62,8 +62,11 @@ class RequestId(base.Middleware):
         actionName = ""
         if req.path == '/':
             query = req.query_string
-            d = dict([x.split("=") for x in query.split("&")])
-            actionName = d['Action']
+            try:
+                d = dict([x.split("=") for x in query.split("&")])
+                actionName = d['Action']
+            except:
+                actionName = req.path.split('/')[-1]
         else:
             actionName = req.path.split('/')[-1]
         req.environ[ENV_REQUEST_ID] = req_id
