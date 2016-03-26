@@ -16,12 +16,24 @@
 from oslo_context import context
 import webob.dec
 
+from oslo_config import cfg
+from oslo_log import log
 from oslo_middleware import base
-
+from metricgenerator.logger import Logger as metricLogger
 
 ENV_REQUEST_ID = 'openstack.request_id'
 HTTP_RESP_HEADER_REQUEST_ID = 'Request-Id'
 
+ec2_opts = [
+    cfg.StrOpt('monitoring_config',
+               default='/tmp/config.cfg',
+               help='Config for details on emitting metrics')
+]
+
+CONF = cfg.CONF
+CONF.register_opts(ec2_opts)
+
+metricLog = metricLogger("iam-api", CONF.monitoring_config)
 
 class RequestId(base.Middleware):
     """Middleware that ensures request ID.
@@ -29,10 +41,10 @@ class RequestId(base.Middleware):
     It ensures to assign request ID for each API request and set it to
     request environment. The request ID is also added to API response.
     """
-
     @webob.dec.wsgify
     def __call__(self, req):
         req_id = context.generate_request_id()
+        metricLog.startTime()
         if (req.headers.get('Request-Id') != None) and\
         (req.path == '/v3/token-auth' or\
         req.path == '/v3/sign-auth' or\
@@ -47,8 +59,17 @@ class RequestId(base.Middleware):
         req.path == '/sign-auth-ex' or\
         req.path == '/ec2-auth-ex'):
             req_id = req.headers.get('Request-Id')
+        actionName = ""
+        if req.path == '/':
+            query = req.query_string
+            d = dict([x.split("=") for x in query.split("&")])
+            actionName = d['Action']
+        else:
+            actionName = req.path.split('/')[-1]
         req.environ[ENV_REQUEST_ID] = req_id
+        appendRequestDict = {'requestid' : req_id}
         response = req.get_response(self.application)
+        metricLog.reportTime(actionName, addOnInfoPairs = appendRequestDict)
         if HTTP_RESP_HEADER_REQUEST_ID not in response.headers:
             response.headers.add(HTTP_RESP_HEADER_REQUEST_ID, req_id)
         return response
